@@ -1,5 +1,4 @@
 class Line
-
 	def initialize(name)
 		@name = name
 	end	
@@ -71,48 +70,77 @@ end
 
 
 #victoria.get_stations
+	
 
-
-
-	prompt = "> "
-	puts "Hello! Please select the starting line that you wish"
-	puts "Please press the appropriate number"
-	counter=1
-	lines.each do |x|
-		puts "#{counter} #{x.get_line}"
+	def line_selection(lines)
+		counter=1
+		lines.each do |x|
+		 puts "#{counter} #{x.get_line}"
 		counter+=1
+		end
 	end
 
-	print prompt
-	selection = gets.chomp
 
-    avail_stations = "The following stations are available for you\nPlease select the starting station that you wish"
-	case selection
+
+	@prompt = "> "
+	puts "Hello! Please select the starting line that you wish by number"
+	line_selection(lines)
+	print @prompt
+	start_line = gets.chomp
+    @station = "The following stations are available for you\nPlease select the starting station that you wish"
+    # station = "The following stations are available for you\nPlease select the end station that you wish"
+   
+
+
+    def user_choice(lines,victoria,bakerloo,central)
+    	end_line = "Please select the ending line that you wish"
+		print @prompt
+	    start_point = gets.chomp
+	    
+	    puts end_line
+	    line_selection(lines)
+	    
+	    print @prompt
+	    end_line = gets.chomp
+	    
+	    if end_line == "1"
+	    	end_line = victoria
+	    elsif end_line == "2"
+	    	end_line = bakerloo
+	    elsif end_line == "3"
+	    	end_line = central
+	    end
+	    		
+	    puts @station
+	    end_line.get_stations
+
+
+	    print @prompt
+		end_point = gets.chomp
+    end
+
+
+
+	case start_line
 	   
 	   when "1"
 	   	    puts "You have selected the #{victoria.get_line} line \n"
-	   	    puts avail_stations
+	   	    puts @station
 			victoria.get_stations
-			
-			print prompt
-	   	    selection = gets.chomp
+			user_choice(lines,victoria,bakerloo,central)
 
 	   when "2"
 	   		puts "You have selected the #{bakerloo.get_line} line \n"
-	   		puts avail_stations
+	   		puts @station
 	   		bakerloo.get_stations
+	   		user_choice(lines,victoria,bakerloo,central)
 
-	   		print prompt
-	   	    selection = gets.chomp
-
+	 
 	   when	"3"
 	   		puts "You have selected the #{central.get_line} line \n"
-	   		puts avail_stations
+	   		puts @station
 	   		central.get_stations
-
-	   		print prompt
-	   	    selection = gets.chomp
-
+	   		user_choice(lines,victoria,bakerloo,central)
 	end
 		
 
