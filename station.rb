@@ -13,7 +13,11 @@ class Line
 		@array = array
 	end
 
-	def get_stations	
+  def get_stations
+    @array
+  end
+
+	def get_stations_name	
 	  @array.each do |station|
 	  	yield station.name
 	  end
@@ -33,85 +37,126 @@ class Station
 	end
 end
 
-
 class Init
   def create_stations
-  	@lines = {:victoria => Line.new("Victoria"), :bakerloo => Line.new("Bakerloo"), :central => Line.new("Central")}
+  	@lines = [Line.new("Victoria"),
+              Line.new("Bakerloo"),
+              Line.new("Central")]
   	
-  	@lines[:victoria].stations(
-                      Station.new("Kings Cross"),
-          				 	  Station.new("Euston"),
-          				  	Station.new("Warren Street"),
-          				 	  Station.new("Oxford Circus"),
-          				 	  Station.new("Green Park"),
-          				 	  Station.new("Victoria"),
-          				 	  Station.new("Pimlico"))
+  	@lines[0].stations(
+      Station.new("Kings Cross"),
+	 	  Station.new("Euston"),
+	  	Station.new("Warren Street"),
+	 	  Station.new("Oxford Circus"),
+	 	  Station.new("Green Park"),
+	 	  Station.new("Victoria"),
+	 	  Station.new("Pimlico"))
 
-  	@lines[:bakerloo].stations(
-                      Station.new("Elephant and Castle"),
-                      Station.new("Lambeth North"),
-                      Station.new("Waterloo"),
-          			  	  Station.new("Embankment"),
-          			  	  Station.new("Charing Cross"),
-          			  	  Station.new("Picadilly Circus"),
-          			  	  Station.new("Oxford Circus"),
-          			  	  Station.new("Regent's Park"),
-          			  	  Station.new("Baker Street"))
+  	@lines[1].stations(
+      Station.new("Elephant and Castle"),
+      Station.new("Lambeth North"),
+      Station.new("Waterloo"),
+  	  Station.new("Embankment"),
+  	  Station.new("Charing Cross"),
+  	  Station.new("Picadilly Circus"),
+  	  Station.new("Oxford Circus"),
+  	  Station.new("Regent's Park"),
+  	  Station.new("Baker Street"))
 
-  	@lines[:central].stations(
-                      Station.new("Notting Hill"),
-          			     	Station.new("Queensway"),
-          			     	Station.new("Lancaster Gate"),
-          				 	  Station.new("Marble Arch"),
-          				 	  Station.new("Bond Street"),
-          				 	  Station.new("Oxford Circus"),
-          				 	  Station.new("Tottenham Court Road"), 
-          				 	  Station.new("Holborn"),
-          				 	  Station.new("Chancery Lane"))
-
+  	@lines[2].stations(
+      Station.new("Notting Hill"),
+     	Station.new("Queensway"),
+     	Station.new("Lancaster Gate"),
+   	  Station.new("Marble Arch"),
+   	  Station.new("Bond Street"),
+   	  Station.new("Oxford Circus"),
+   	  Station.new("Tottenham Court Road"), 
+   	  Station.new("Holborn"),
+   	  Station.new("Chancery Lane"))
   end
 
-
-	def line_selection
-		@lines.each do |line,value|
-      yield value.get_name
-		end
-	end
-
-  def get_lines
-    @lines
+  def merge_lines
+    stations = []
+    @lines.each do |line|
+      stations += line.get_stations 
+    end
+    stations
   end
 
+  def get_stations_names
+    stations = []
+    merge_lines.each do |station|
+      stations << station.name
+      stations
+    end
+    stations.uniq.each do |station|
+      yield station
+    end
+  end
 
-  def find_route(start_line,start_point,end_line,end_point)
-  	stations = start_line.route
+  def find_stations(start_station,end_station)
+    start_line = []
+    end_line = []
+
+    start_point = ""
+    end_point = ""
+
+    @lines.each do |line|
+      line.get_stations.each do |station|
+        if station.name == start_station
+          start_point = station.name
+          line.get_stations_name do |station|
+            start_line << station
+          end
+        end
+        if station.name == end_station
+          end_point = station.name
+          line.get_stations_name do |station|
+            end_line << station
+          end
+        end 
+      end
+    end
     # binding.pry
-  	start_station_index = start_point.to_i - 1
-    end_station_index = end_point.to_i - 1
+    return start_line, end_line, start_point, end_point
+  end
 
-    counter =0
 
-    puts "Between #{stations[start_station_index].name} and #{stations[end_station_index].name}\n"
-    puts "Your route contains the following stations:"
+  def find_route(start_station, end_station)   
+    start_line, end_line, start_point, end_point = find_stations(start_station, end_station)
 
-    if start_station_index < end_station_index
-    	stops_names = stations[start_station_index..end_station_index]
+    start_station_index = start_line.index(start_point)
+    end_station_index = end_line.index(end_point)
 
-      stops_names.each do |x|
-        counter+=1
-        puts "#{counter}. #{x.name}"
-      end 
+    line_one = []
+    line_two = []
 
+    if start_line != end_line
+      common_station = start_line & end_line
+      common_station_start_index = start_line.index(common_station[0])
+      common_station_end_index = end_line.index(common_station[0])
+
+      if common_station_start_index > start_station_index
+        line_one = start_line[start_station_index..common_station_start_index]
+      else
+        line_one = start_line[common_station_start_index..start_station_index].reverse
+      end
+
+      if common_station_end_index > end_station_index
+        line_two = end_line[end_station_index..common_station_end_index].reverse
+      else
+        line_two = end_line[common_station_end_index..end_station_index]
+      end
+      route = (line_one + line_two).uniq
     else
-      stops_names = stations[end_station_index..start_station_index]
-
-      stops_names.reverse_each do |x|
-        counter+=1
-        puts "#{counter}. #{x.name}"
+      if start_station_index < end_station_index
+        route = start_line[start_station_index..end_station_index]
+      else
+        route = start_line[end_station_index..start_station_index].reverse
       end
     end
 
-  
+    route
   end
 end
 
@@ -119,67 +164,59 @@ end
 class App
   def user_choice
     @tfl = Init.new
-    @prompt = "> "
-    puts "Hello! Please select the starting line that you wish"
     @tfl.create_stations
+    @prompt = "> "
     counter = 0
 
-    @tfl.line_selection do |line|
-      counter += 1
-      puts "#{counter}. #{line}"
-    end
-    counter = 0
-    print @prompt 
-    start_line = gets.chomp.to_i
-    start_line, start_station = find_station(start_line)
-
-
-    puts "Please select the ending line that you wish"
-    @tfl.line_selection do |line|
-      counter += 1
-      puts "#{counter}. #{line}"
-    end
-
-    print @prompt
-    end_line = gets.chomp.to_i
-    end_station, end_station= find_station(end_line)
-
-	  @tfl.find_route(start_line,start_station,end_line,end_station)
-  end
-
-
-  def find_station(line)
-    counter = 0
-    case line
-    when 1
-      @line = @tfl.get_lines[:victoria]
-
-      puts "You have selected the #{@line.get_name} line. The following stations are available: \n"
-      @line.get_stations do |station|
+    puts "Hello! Please select the starting station that you wish"
+    @tfl.get_stations_names do |station|
       counter+=1
+      if counter<10
+      puts "#{counter}.  #{station}"
+      else
       puts "#{counter}. #{station}"
+      end
     end
-    when 2
-      @line = @tfl.get_lines[:bakerloo]
+    counter = 0
+    print @prompt
+    start_station = gets.chomp.to_i - 1
+
+    puts "Please select the end station that you wish"
+    @tfl.get_stations_names do |station|
+      counter += 1
+      if counter < 10
+      puts "#{counter}.  #{station}"
+      else
+      puts "#{counter}. #{station}"
+      end
+    end
     
-      puts "You have selected the #{@line.get_name} line. The following stations are available: \n"
-      @line.get_stations do |station|
-      counter+=1
-      puts "#{counter}. #{station}"
-    end   
-    when 3
-      @line = @tfl.get_lines[:central]
-
-      puts "You have selected the #{@line.get_name} line. The following stations are available: \n"
-      @line.get_stations do |station|
-      counter+=1
-      puts "#{counter}. #{station}"
-    end
-    end
-
     print @prompt
-    station = gets.chomp.to_i
-    return @line, station
+    end_station = gets.chomp.to_i - 1
+
+    counter = 0
+    @tfl.get_stations_names do |station|
+      if start_station == counter
+         start_station = station
+      elsif end_station == counter
+         end_station = station
+      end
+      counter+=1
+    end
+
+    counter = 0
+    puts "Your route contains the following stations"
+	  stations = @tfl.find_route(start_station,end_station)
+
+      stations.each do |station|
+        counter += 1
+        if counter < 10
+        puts "#{counter}.  #{station}"
+        else
+        puts "#{counter}. #{station}"
+        end
+      end
+
   end
 end
 	
