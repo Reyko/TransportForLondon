@@ -1,4 +1,4 @@
-require 'pry'
+
 
 class Line
 	def initialize(name)
